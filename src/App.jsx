@@ -1,62 +1,48 @@
 import { useState } from "react";
-import Square from './components/Square.jsx';
-import calculateWinner from "./components/CalculateWinner.jsx";
+import Board from "./components/Board.jsx";
 
 
-// ------ fonction parente -> Board  -------
-export default function Board(){
 
-  const [isNext, setIsnext] = useState(true);
-  const [squares, setSquares] = useState(Array(9).fill(null));
+// ------ fonction parente -> Game  -------
+export default function Game() {
 
-  // afficher quel joueur doit jouer ou a gagné
-  const winner = calculateWinner(squares);
-  let status;
-  if (winner) {
-    status = "Winner: " + winner;
-  } else {
-    status = "NextPlayer: " + (isNext ? "X" : "O");
+  const [history, setHistory] = useState([Array(9).fill(null)]);
+  const [currentMove, setCurrentMove] = useState(0);
+  const isNext = currentMove % 2 === 0;
+  const currentSquares = history[currentMove];
+
+  function handlePlay (nextSquares) {
+    const nextHistory = [...history.slice(0, currentMove + 1), nextSquares];
+    setHistory(nextHistory);
+    setCurrentMove(nextHistory.length - 1);
   }
 
-  // changer les états et l'affichage au click sur chaque case
-  function handleClick(i){
-
-    // verifier que la case clické est vide ou si il y a un gagnant
-    if(squares[i] || calculateWinner(squares)) {
-      return;
-    }
-    // faire une copie du tableau
-    const nextSquares = squares.slice();
-    // alternet entre X et O quand on click grâce à un booleen
-    if(isNext) {
-      nextSquares[i] = "X";
-    } else {
-      nextSquares[i] = "O";
-    }
-    
-    setSquares(nextSquares);
-    setIsnext(!isNext);
+  function jumpTo(nextMove){
+    setCurrentMove(nextMove);
   }
+
+  const moves = history.map((squares, move) => {
+    let description;
+    if (move > 0) {
+      description = 'Go to move # ' + move;
+    }else {
+      description = 'Go to game startTransition';
+    }
+    return (
+      <li key={move}>
+        <button onClick={() => jumpTo(move)}>{description}</button>
+      </li>
+    );
+  });
 
   return (
-    <>
-      <div className="status" >{status}</div>
-      <div className="board-row">
-        <Square value={squares[0]} onSquareClick={() => handleClick(0)} />
-        <Square value={squares[1]} onSquareClick={() => handleClick(1)} />
-        <Square value={squares[2]} onSquareClick={() => handleClick(2)} />
+    <div className="game">
+      <div className="game-board">
+        <Board isNext={isNext} squares={currentSquares} onPlay={handlePlay} />
       </div>
-      <div className="board-row">
-        <Square value={squares[3]} onSquareClick={() => handleClick(3)} />
-        <Square value={squares[4]} onSquareClick={() => handleClick(4)} />
-        <Square value={squares[5]} onSquareClick={() => handleClick(5)} />
+      <div className="game-info">
+        <ol>{moves}</ol>
       </div>
-      <div className="board-row">
-        <Square value={squares[6]} onSquareClick={() => handleClick(6)} />
-        <Square value={squares[7]} onSquareClick={() => handleClick(7)} />
-        <Square value={squares[8]} onSquareClick={() => handleClick(8)} />
-      </div>
-      
-    </>
-  );
+    </div>
+  )
 }
